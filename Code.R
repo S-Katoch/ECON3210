@@ -71,6 +71,8 @@ df$post <- with(df, ifelse(wave >= wave_hosp & treat_group == 1, 1, 0))
 # Sanity check
 table(df$treat_group, df$post)
 
+# Look for similar pre-treatment trends between treated and control groups. If the lines diverge before treatment, the DiD assumption may not hold.
+                          
 # Average outcome by wave and treatment
 avg_trend <- df %>%
   group_by(wave, treat_group) %>%
@@ -90,3 +92,4 @@ pre_wave %>%
   group_by(treat_group) %>%
   summarise(across(c(age_hosp, male, white, medicaid, lessthan_hs),
                    mean, na.rm = TRUE))
+
