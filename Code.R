@@ -154,3 +154,47 @@ ggplot(avg_oop, aes(x = wave, y = mean_oop, color = group)) +
        y = "Average OOP Expenditure",
        color = "Group") +
   theme_minimal()
+
+  # Load your data
+df <- read.csv("hosp_admn.csv")
+
+# Define treatment and control groups
+df$treat_group <- ifelse(df$wave_hosp <= 3, 1, 0)
+df$never_hosp <- ifelse(df$ever_hosp == 0, 1, 0)
+df$group <- ifelse(df$treat_group == 1, "Treated",
+                   ifelse(df$never_hosp == 1, "Never Hospitalised", NA))
+
+# Filter to include only treated and never-hospitalised groups
+desc_df <- df %>%
+  filter(!is.na(group))
+
+# ---- NUMERIC VARIABLES ----
+# Summary statistics: mean, sd, median, etc.
+numeric_vars <- desc_df %>%
+  select(oop_spend, riearnsemp, age_hosp, num_hosps, rjhours, rwgiwk, rwgihr)
+
+summary_stats <- psych::describeBy(numeric_vars, group = desc_df$group, mat = TRUE)
+
+# ---- CATEGORICAL VARIABLES (e.g. race, gender) ----
+# Function to compute % distributions by group
+categorical_summary <- function(var) {
+  desc_df %>%
+    filter(!is.na(!!sym(var))) %>%
+    group_by(group, !!sym(var)) %>%
+    summarise(count = n(), .groups = "drop") %>%
+    group_by(group) %>%
+    mutate(percentage = round(100 * count / sum(count), 1)) %>%
+    arrange(group, desc(percentage))
+}
+
+# Examples
+race_white <- categorical_summary("white")
+race_black <- categorical_summary("black")
+race_hispanic <- categorical_summary("hispanic")
+gender <- categorical_summary("male")
+education <- categorical_summary("collegeplus")  # or hs_grad, some_college, etc.
+
+# View outputs
+print(summary_stats)
+print(race_white)
+print(gender)
