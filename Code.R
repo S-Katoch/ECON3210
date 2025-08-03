@@ -71,8 +71,6 @@ df$post <- with(df, ifelse(wave >= wave_hosp & treat_group == 1, 1, 0))
 # Sanity check
 table(df$treat_group, df$post)
 
-# Look for similar pre-treatment trends between treated and control groups. If the lines diverge before treatment, the DiD assumption may not hold.
-                          
 # Average outcome by wave and treatment
 avg_trend <- df %>%
   group_by(wave, treat_group) %>%
@@ -93,3 +91,66 @@ pre_wave %>%
   summarise(across(c(age_hosp, male, white, medicaid, lessthan_hs),
                    mean, na.rm = TRUE))
 
+
+# THE FOLLOWING CODE OUTPUTS THE GRAPH OF THE COMPARISON
+# BETWEEN LABOUR EARNINGS IN BOTH GROUPS
+# Load your data
+df <- read.csv("hosp_admn.csv")
+
+# Define treatment group: hospitalised before or at wave 3
+df$treat_group <- ifelse(df$wave_hosp <= 3, 1, 0)
+
+# Define control group: never hospitalised
+df$never_hosp <- ifelse(df$ever_hosp == 0, 1, 0)
+
+# Keep only treatment and never-hospitalised control
+plot_df <- df %>%
+  filter(treat_group == 1 | never_hosp == 1) %>%
+  mutate(group = ifelse(treat_group == 1, "Treated", "Never Hospitalised"))
+
+# Calculate average labour earnings by wave and group
+avg_trend <- plot_df %>%
+  group_by(wave, group) %>%
+  summarise(mean_earnings = mean(riearnsemp, na.rm = TRUE), .groups = "drop")
+
+# Plot the trends
+ggplot(avg_trend, aes(x = wave, y = mean_earnings, color = group)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(title = "Average Labour Earnings by Wave",
+       x = "Wave",
+       y = "Average Labour Earnings",
+       color = "Group") +
+  theme_minimal()
+
+
+# THE FOLLOWING CODE OUTPUTS THE GRAPH OF THE COMPARISON
+# BETWEEN OUT OF POCKET MEDICAL EXPENDATURE IN BOTH GROUPS
+# Load your data
+df <- read.csv("hosp_admn.csv")
+
+# Define treatment group: hospitalised before or at wave 3
+df$treat_group <- ifelse(df$wave_hosp <= 3, 1, 0)
+
+# Define control group: never hospitalised
+df$never_hosp <- ifelse(df$ever_hosp == 0, 1, 0)
+
+# Keep only treatment and never-hospitalised control
+plot_df <- df %>%
+  filter(treat_group == 1 | never_hosp == 1) %>%
+  mutate(group = ifelse(treat_group == 1, "Treated", "Never Hospitalised"))
+
+# Calculate average oop_spend by wave and group
+avg_oop <- plot_df %>%
+  group_by(wave, group) %>%
+  summarise(mean_oop = mean(oop_spend, na.rm = TRUE), .groups = "drop")
+
+# Plot the trends
+ggplot(avg_oop, aes(x = wave, y = mean_oop, color = group)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 2) +
+  labs(title = "Average Out-of-Pocket Medical Expenditure by Wave",
+       x = "Wave",
+       y = "Average OOP Expenditure",
+       color = "Group") +
+  theme_minimal()
